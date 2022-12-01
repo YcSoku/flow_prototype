@@ -93,7 +93,7 @@ void main()
     sls.edgeParam = 2.0 * parity - 1.0;
 
     float segmentRate = float(currentVertex) / segmentNum;
-    sls.alphaDegree = 1.0 - sin(segmentRate);
+    sls.alphaDegree = 1.0 - segmentRate;
 
     sls.velocity = texelFetch(particlePool, c_uv, 0).b;
     sls.isDiscarded = isAlive;

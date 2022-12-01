@@ -1,14 +1,14 @@
 import { textureFormats } from './textureFormat';
 
 export interface TextureDataInfo {
-    target : number,
-    flip : boolean,
-    width : number,
-    height : number,
-    format : number,
-    depth? : number,
-    mipLevels? : number,
-    arrayLayers? : number
+    target: number,
+    flip: boolean,
+    width?: number,
+    height?: number,
+    format: number,
+    depth?: number,
+    mipLevels?: number,
+    arrayLayers?: number
 }
 
 export class TextureData implements TextureDataInfo {
@@ -26,8 +26,8 @@ export class TextureData implements TextureDataInfo {
     constructor(info: TextureDataInfo) {
         this.target = info.target;
         this.flip = info.flip;
-        this.width = info.width;
-        this.height = info.height;
+        this.width = info.width ? info.width : 0;
+        this.height = info.height ? info.height : 0;
         this.format = info.format;
         this.depth =  info.depth ? info.depth : 1;
         this.mipLevels = info.mipLevels ? info.mipLevels : 1;

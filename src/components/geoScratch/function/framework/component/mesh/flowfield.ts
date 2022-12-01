@@ -8,8 +8,8 @@ const stf = ScratchTextureFormat;
 const stm = textureManager;
 
 // create random positions and velocities.
-const rand = (min: number, max: number) => {
-    if (max === undefined) {
+const rand = (min: number, max?: number) => {
+    if (!max) {
         max = min;
         min = 0;
     }
@@ -81,7 +81,7 @@ class FlowFieldController {
     constraints: FlowFieldConstraints;
     
     constructor(constraints?: FlowFieldConstraints) {
-        this.lineNum = 10000;
+        this.lineNum = 65536;
         this.segmentNum = 16;
         this.fullLife = this.segmentNum * 10;
         this.progressRate = 0.0;
@@ -171,7 +171,6 @@ export class FlowFieldManager {
     private sVAO: WebGLVertexArrayObject = 0;
     private rVAO: WebGLVertexArrayObject = 0;
     private xfBO: WebGLTransformFeedback = 0;
-    private renderObjects: Array<RenderObjectSet> = [];
 
     particlePoolView : TextureView | null = null;
     sampler = 0;
@@ -241,8 +240,6 @@ export class FlowFieldManager {
                 textureDataInfo: {
                     target: gl.TEXTURE_2D, 
                     flip: true,
-                    width: 0,
-                    height: 0,
                     format: stf.R8G8B8A8_UBYTE},
                 viewType: gl.TEXTURE_2D,
                 format: stf.R8G8B8A8_UBYTE
@@ -393,19 +390,6 @@ export class FlowFieldManager {
         this.poolShader = await loadShader_url(gl, "textureDebug", "http://localhost:5173/shaders/showPool.vert", "http://localhost:5173/shaders/showPool.frag");
         this.textureShader = await loadShader_url(gl, "textureDebug", "http://localhost:5173/shaders/texture.vert", "http://localhost:5173/shaders/texture.frag");
         
-        // Set References of VAOs, PBO, XfBO
-        this.renderObjects[0] = {
-            sVAO: this.simulationVAO,
-            rVAO: this.renderVAO2,
-            xfBO: this.XFBO,
-            pVBO: this.simulationBuffer
-        }
-        this.renderObjects[1] = {
-            sVAO: this.simulationVAO2,
-            rVAO: this.renderVAO,
-            xfBO: this.XFBO2,
-            pVBO: this.xfSimulationBuffer
-        }
     }
 
     getFieldTexture(index: number) {
@@ -540,11 +524,11 @@ export class FlowFieldManager {
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // gl.enable(gl.BLEND);
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, (this.segmentNum - 1) * 2, this.streamline);
-        gl.disable(gl.BLEND);
+        // gl.disable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
 
         gl.bindVertexArray(null);

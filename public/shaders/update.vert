@@ -104,22 +104,6 @@ float speed_rate(vec2 speed)
 
 void simulation(vec2 resolution)
 {
-    // int iterNum =1;
-    // vec3 theInfo = particleInfo;
-    // for (int i = 0; i < iterNum; i+=1)
-    // {
-    //     vec2 uv = theInfo.xy;
-    //     vec2 speed = lookup_speed(uv, resolution);
-    //     float speedRate = speed_rate(speed);
-
-    //     vec2 nPos = vec2(theInfo.xy + speed * speedFactor / boundary);
-    //     theInfo = vec3(clamp(nPos, vec2(0.0), vec2(1.0)), speedRate);
-    // }
-    // float dropped = drop(theInfo.z, theInfo.xy) * is_in_flow(theInfo.xy);
-
-    // newInfo = mix(particleInfo, theInfo, dropped);
-    // aliveTime = mix(segmentNum, survivalCount - 1.0, dropped);
-
     vec2 uv = particleInfo.xy;
     vec2 speed = lookup_speed(uv, resolution);
     float speedRate = speed_rate(speed);
@@ -140,10 +124,10 @@ void die(vec2 resolution)
     vec4 rebirthColor = texture(validAddress, uv);
     float rebirth_x = float((int(rebirthColor.r * 255.0) << 8) + int(rebirthColor.g * 255.0));
     float rebirth_y = float((int(rebirthColor.b * 255.0) << 8) + int(rebirthColor.a * 255.0));
-    float rand_x = rand(seed + rebirth_x / resolution.x);
-    float rand_y = rand(seed + rebirth_y / resolution.y);
+    rebirth_x = rebirth_x + rand(seed + rebirth_x);
+    rebirth_y = rebirth_y + rand(seed + rebirth_y);
 
-    vec2 rebirthPos = vec2(rebirth_x + rand_x, rebirth_y + rand_y) / resolution;
+    vec2 rebirthPos = vec2(rebirth_x, rebirth_y) / resolution;
     newInfo = vec3(rebirthPos, speed_rate(lookup_speed(rebirthPos, resolution)));
     aliveTime = survivalCount - 1.0;
     

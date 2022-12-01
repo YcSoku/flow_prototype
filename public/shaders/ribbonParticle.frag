@@ -48,9 +48,9 @@ vec3 velocityColor(float speed)
 
 float getAlpha(float param)
 {
-    float fillBorder = fillWidth / (fillWidth + 2.0 * aaWidth);
-    float alpha = 1.0 - (param - fillBorder) / (1.0 - fillBorder) + 0.5;
-    return mix(1.0, alpha, step(fillBorder, param));
+    if (aaWidth == 0.0) return 1.0;
+    float alpha = 1.0 - sin(clamp((param * (0.5 * fillWidth + aaWidth) - 0.5 * fillWidth) / aaWidth, 0.0, 1.0) * 2.0 / 3.141592653);
+    return alpha;
 }
 
 void main() 
@@ -60,5 +60,6 @@ void main()
 
     // vec3 color = mix(colorFromInt(rampColors[int(sls.velocity * 7.0)]), colorFromInt(rampColors[int(sls.velocity * 7.0 + 0.5)]), fract(sls.velocity * 7.0));
     vec3 color = velocityColor(sls.velocity);
-    fragColor = vec4(color, alpha);
+    color = mix(vec3(0.6), color, alpha);
+    fragColor = vec4(color, 1.0);
 }
