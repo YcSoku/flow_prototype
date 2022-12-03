@@ -97,12 +97,10 @@ export class TextureData implements TextureDataInfo {
         rc.bindTexture(this.target, null);
     }
 
-    UpdateByBuffer(rc: WebGL2RenderingContext, level: number, xoffset: number, yoffset: number, width: number, height: number, pbo: WebGLBuffer) {
+    UpdateByBuffer(rc: WebGL2RenderingContext, level: number, xoffset: number, yoffset: number, width: number, height: number) {
 
-        rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, pbo);
         rc.bindTexture(this.target, this.ID);
         rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, Scratch_GL_Data_Formats[this.format].format, Scratch_GL_Data_Formats[this.format].type, 0);
-        rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, null);
         rc.bindTexture(this.target, null);
     }
 

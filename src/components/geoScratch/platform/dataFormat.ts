@@ -1,13 +1,19 @@
 export enum ScratchDataFormat {
-    UNKNOWN = 0,
-    R8G8B8A8_UBYTE  = 1,
-    R32G32B32_SFLOAT = 2
+    R8G8B8A8_UBYTE = 0,
+    R32_SFLOAT,
+    R32G32_SFLOAT,
+    R32G32B32_SFLOAT,
+    R32G32B32A32_SFLOAT,
+    
+    Format_Num
 }
 
 export interface DataFormat {
     internalFormat: number,
     format: number,
-    type: number
+    type: number,
+    components: number,
+    size: number
 }
 
 export interface DataFormats {

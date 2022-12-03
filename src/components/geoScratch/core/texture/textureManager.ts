@@ -165,7 +165,7 @@ export class TextureManager {
         this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByData(this.rc!, level, xoffset, yoffset, width, height, data);
     }
 
-    UpdateTextureDataByBuffer(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number, pbo: WebGLBuffer) {
-        this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByBuffer(this.rc!, level, xoffset, yoffset, width, height, pbo);
+    UpdateTextureDataByBuffer(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number) {
+        this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByBuffer(this.rc!, level, xoffset, yoffset, width, height);
     }
 }

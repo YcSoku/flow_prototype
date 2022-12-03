@@ -303,9 +303,9 @@ export class FlowFieldManager {
 
         // Make uniform buffer object
         this.UBO = gl.createBuffer()!;
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.UBO);
-        gl.bufferData(gl.UNIFORM_BUFFER, 48, gl.DYNAMIC_DRAW);
-        gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.UBO);
+        gl.bufferData(gl.ARRAY_BUFFER, 48, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 
         // Set particle pool
@@ -432,7 +432,7 @@ export class FlowFieldManager {
     bindUBO(gl: WebGL2RenderingContext, bindingPointIndex: number) {
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.UBO);
         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.uboMapBuffer);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, bindingPointIndex, this.UBO);
+        gl.bindBufferRange(gl.UNIFORM_BUFFER, bindingPointIndex, this.UBO, 0, this.uboMapBuffer.length * 4.0);
     }
 
     swap() {
@@ -500,7 +500,9 @@ export class FlowFieldManager {
         gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
 
         // Pass 1 - Operation 2: Update particle pool
-        stm.UpdateTextureDataByBuffer(this.particlePool, 0, this.textureOffsetArray[this.beginBlock].offsetX, this.textureOffsetArray[this.beginBlock].offsetY, this.maxBlockSize, this.maxBlockSize, this.unPackBuffer);
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, this.unPackBuffer);
+        stm.UpdateTextureDataByBuffer(this.particlePool, 0, this.textureOffsetArray[this.beginBlock].offsetX, this.textureOffsetArray[this.beginBlock].offsetY, this.maxBlockSize, this.maxBlockSize);
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
 
         // Pass 2 - Operation 1: Rendering
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
