@@ -1,10 +1,10 @@
-import { ScratchTextureFormat } from '../../../../platform/WebGL2/texture/textureFormat';
+import { ScratchDataFormat } from '../../../../platform/dataFormat';
 import { textureManager } from '../../../../core/managers';
 import axios from 'axios';
 import {Shader} from '../../../render/shader';
 import type {TextureView, TextureViewInfo} from '../../../../platform/WebGL2/texture/textureView';
 
-const stf = ScratchTextureFormat;
+const stf = ScratchDataFormat;
 const stm = textureManager;
 
 // create random positions and velocities.
@@ -314,14 +314,14 @@ export class FlowFieldManager {
                 flip: false,
                 width: MAX_TEXTURE_SIZE,
                 height: MAX_TEXTURE_SIZE,
-                format: stf.R32G32B32_FLOAT},
+                format: stf.R32G32B32_SFLOAT},
             viewType: gl.TEXTURE_2D,
-            format: stf.R32G32B32_FLOAT
+            format: stf.R32G32B32_SFLOAT
         });
         this.particlePool = stm.SetTexture(tv, this.sampler);
 
         for (let i = 0; i < MAX_SEGMENT_NUM; i++) {
-            stm.UpdateTextureDataByArray(this.particlePool, 0, this.textureOffsetArray[i].offsetX, this.textureOffsetArray[i].offsetY, this.maxBlockSize, this.maxBlockSize, this.particleMapBuffer);
+            stm.UpdateTextureDataBySource(this.particlePool, 0, this.textureOffsetArray[i].offsetX, this.textureOffsetArray[i].offsetY, this.maxBlockSize, this.maxBlockSize, this.particleMapBuffer);
         }
 
         // Set Vertex Array Object
@@ -389,7 +389,6 @@ export class FlowFieldManager {
         this.drawShader = await loadShader_url(gl, "draw", "http://localhost:5173/shaders/ribbonParticle.vert", "http://localhost:5173/shaders/ribbonParticle.frag");
         this.poolShader = await loadShader_url(gl, "textureDebug", "http://localhost:5173/shaders/showPool.vert", "http://localhost:5173/shaders/showPool.frag");
         this.textureShader = await loadShader_url(gl, "textureDebug", "http://localhost:5173/shaders/texture.vert", "http://localhost:5173/shaders/texture.frag");
-        
     }
 
     getFieldTexture(index: number) {

@@ -1,8 +1,8 @@
-import { textureFormats } from './textureFormat';
+import { Scratch_GL_Data_Formats } from '../dataFormat/format';
 
 export interface TextureDataInfo {
     target: number,
-    flip: boolean,
+    flip?: boolean,
     width?: number,
     height?: number,
     format: number,
@@ -25,7 +25,7 @@ export class TextureData implements TextureDataInfo {
 
     constructor(info: TextureDataInfo) {
         this.target = info.target;
-        this.flip = info.flip;
+        this.flip = info.flip ? info.flip : false;
         this.width = info.width ? info.width : 0;
         this.height = info.height ? info.height : 0;
         this.format = info.format;
@@ -40,7 +40,7 @@ export class TextureData implements TextureDataInfo {
 
         if (texture.width !== 0 && texture.height !== 0) {
             rc.bindTexture(texture.target, texture.ID);
-            rc.texStorage2D(texture.target, texture.mipLevels, textureFormats[texture.format].internalFormat, texture.width, texture.height);
+            rc.texStorage2D(texture.target, texture.mipLevels, Scratch_GL_Data_Formats[texture.format].internalFormat, texture.width, texture.height);
             rc.bindTexture(info.target, null);
         }
 
@@ -48,7 +48,7 @@ export class TextureData implements TextureDataInfo {
     }
 
     FillByBuffer(rc: WebGL2RenderingContext, level: number,  width: number, height: number, pbo: WebGLBuffer) {
-        let format = textureFormats[this.format];
+        let format = Scratch_GL_Data_Formats[this.format];
 
         rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, pbo);
         rc.bindTexture(this.target, this.ID);
@@ -65,7 +65,7 @@ export class TextureData implements TextureDataInfo {
     
     FillByImage(rc: WebGL2RenderingContext, level: number, url: string) {
         
-        let format = textureFormats[this.format];
+        let format = Scratch_GL_Data_Formats[this.format];
         const that = this;
         const image = new Image();
         image.src = url;
@@ -84,7 +84,7 @@ export class TextureData implements TextureDataInfo {
     }
 
     FillByData(rc: WebGL2RenderingContext, level: number,  width: number, height: number, data: ArrayBufferView) {
-        let format = textureFormats[this.format];
+        let format = Scratch_GL_Data_Formats[this.format];
 
         rc.bindTexture(this.target, this.ID);
         if (this.flip) rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
@@ -101,7 +101,7 @@ export class TextureData implements TextureDataInfo {
 
         rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, pbo);
         rc.bindTexture(this.target, this.ID);
-        rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, textureFormats[this.format].format, textureFormats[this.format].type, 0);
+        rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, Scratch_GL_Data_Formats[this.format].format, Scratch_GL_Data_Formats[this.format].type, 0);
         rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, null);
         rc.bindTexture(this.target, null);
     }
@@ -110,7 +110,7 @@ export class TextureData implements TextureDataInfo {
         
         rc.bindTexture(this.target, this.ID);
         rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
-        rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, textureFormats[this.format].format, textureFormats[this.format].type, data);
+        rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, Scratch_GL_Data_Formats[this.format].format, Scratch_GL_Data_Formats[this.format].type, data);
         rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, null);
     }
 

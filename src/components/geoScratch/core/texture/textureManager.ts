@@ -161,7 +161,7 @@ export class TextureManager {
         this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.FillByImage(this.rc!, level, url);
     }
 
-    UpdateTextureDataByArray(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number, data: ArrayBufferView) {
+    UpdateTextureDataBySource(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number, data: ArrayBufferView) {
         this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByData(this.rc!, level, xoffset, yoffset, width, height, data);
     }
 
