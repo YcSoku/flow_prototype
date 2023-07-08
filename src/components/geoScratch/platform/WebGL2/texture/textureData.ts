@@ -1,4 +1,8 @@
+import axios from 'axios';
 import { Scratch_GL_Data_Formats } from '../dataFormat/format';
+import Worker from "./readPixels.worker?worker";
+import { TextureManager } from '@/components/geoScratch/core/texture/textureManager';
+
 
 export interface TextureDataInfo {
     target: number,
@@ -20,10 +24,14 @@ export class TextureData implements TextureDataInfo {
     depth : number;
     mipLevels : number;
     arrayLayers : number;
+    masterManager: TextureManager;
 
     ID : WebGLTexture = 0;
 
-    constructor(info: TextureDataInfo) {
+    isReady = false;
+
+    constructor(info: TextureDataInfo, manager: TextureManager) {
+        this.masterManager = manager;
         this.target = info.target;
         this.flip = info.flip ? info.flip : false;
         this.width = info.width ? info.width : 0;
@@ -34,8 +42,8 @@ export class TextureData implements TextureDataInfo {
         this.arrayLayers = info.arrayLayers ? info.arrayLayers : 1;
     }
 
-    static Create(rc: WebGL2RenderingContext, info: TextureDataInfo) {
-        let texture = new TextureData(info);
+    static Create(rc: WebGL2RenderingContext, info: TextureDataInfo, manager: TextureManager) {
+        let texture = new TextureData(info, manager);
         texture.ID = rc.createTexture()!;
 
         if (texture.width !== 0 && texture.height !== 0) {
@@ -63,24 +71,92 @@ export class TextureData implements TextureDataInfo {
         rc.bindTexture(this.target, null);
     }
     
-    FillByImage(rc: WebGL2RenderingContext, level: number, url: string) {
+    async FillByImage(rc: WebGL2RenderingContext, level: number, url: string, width: number, height: number) {
+                    
+        this.width = width;
+        this.height = height;
+
+        rc.bindTexture(this.target, this.ID);
+        rc.texStorage2D(this.target, this.mipLevels, Scratch_GL_Data_Formats[this.format].internalFormat, this.width, this.height);
+        rc.bindTexture(this.target, null);
         
-        let format = Scratch_GL_Data_Formats[this.format];
+        const format = Scratch_GL_Data_Formats[this.format];
         const that = this;
-        const image = new Image();
-        image.src = url;
-        image.onload = function() {
-            rc.bindTexture(that.target, that.ID);
-            if (that.flip) rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
-            rc.texImage2D(that.target, level, format.internalFormat, format.format, format.type, image)
-            rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
-    
-            if (that.mipLevels > 1) {
-                rc.generateMipmap(that.target);
+        const worker = new Worker();
+        let _flip: ImageOrientation = "from-image";
+
+        if (that.flip) {
+            rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
+            _flip = "flipY"
+        }
+
+        axios.get(url, {responseType: "blob"})
+        .then((response) => {
+            if (format.dataType === "Float_Point") {
+                    worker.postMessage([response.data, _flip]);
+                    worker.onmessage = function(e) {
+
+                        rc.bindTexture(that.target, that.ID);
+                        rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, new Float32Array(e.data));
+                        rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+                        if (that.mipLevels > 1) {
+                            rc.generateMipmap(that.target);
+                        }
+
+                        rc.bindTexture(that.target, null);
+                        worker.terminate();
+                    }
             }
-            that.width = image.width;
-            that.height = image.height;
-        };
+            else {
+                createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
+                    .then((imageBitmap) => {
+                        rc.bindTexture(that.target, that.ID);
+                        rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, imageBitmap);
+                        rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+                        if (that.mipLevels > 1) {
+                            rc.generateMipmap(that.target);
+                        }
+
+                        rc.bindTexture(that.target, null);
+                    });
+                }
+        });
+            // createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
+            //     .then((imageBitmap) => {
+
+            //         if (format.dataType === "Float_Point") {
+                    
+            //             worker.postMessage([imageBitmap, _flip]);
+            //             worker.onmessage = function(e) {
+    
+            //                 rc.bindTexture(that.target, that.ID);
+            //                 rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, new Float32Array(e.data));
+            //                 rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                    
+            //                 if (that.mipLevels > 1) {
+            //                     rc.generateMipmap(that.target);
+            //                 }
+
+            //                 rc.bindTexture(that.target, null);
+            //                 worker.terminate();
+            //             }
+            //         }
+            //         else {
+
+            //             rc.bindTexture(that.target, that.ID);
+            //             rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, imageBitmap);
+            //             rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+            //             if (that.mipLevels > 1) {
+            //                 rc.generateMipmap(that.target);
+            //             }
+
+            //             rc.bindTexture(that.target, null);
+            //         }
+            //     });
+        // });
     }
 
     FillByData(rc: WebGL2RenderingContext, level: number,  width: number, height: number, data: ArrayBufferView) {
@@ -109,7 +185,102 @@ export class TextureData implements TextureDataInfo {
         rc.bindTexture(this.target, this.ID);
         rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
         rc.texSubImage2D(this.target, level, xoffset, yoffset, width, height, Scratch_GL_Data_Formats[this.format].format, Scratch_GL_Data_Formats[this.format].type, data);
-        rc.bindBuffer(rc.PIXEL_UNPACK_BUFFER, null);
+        rc.bindTexture(this.target, null);
+    }
+
+    UpdateByImage(rc: WebGL2RenderingContext, level: number, url: string) {
+        this.masterManager.Lock();
+
+        const format = Scratch_GL_Data_Formats[this.format];
+        const that = this;
+        const worker = new Worker();
+        let _flip: ImageOrientation = "from-image";
+        if (that.flip) {
+            rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
+            _flip = "flipY"
+        }
+
+        axios.get(url, {responseType: "blob"})
+        .then((response) => {
+            if (format.dataType === "Float_Point") {
+                    worker.postMessage([response.data, _flip]);
+                    worker.onmessage = function(e) {
+
+                        rc.bindTexture(that.target, that.ID);
+                        rc.texSubImage2D(that.target, level, 0, 0, that.width, that.height, format.format, format.type, new Float32Array(e.data));
+                        rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+                        if (that.mipLevels > 1) {
+                            rc.generateMipmap(that.target);
+                        }
+
+                        rc.bindTexture(that.target, null);
+                        worker.terminate();
+                        that.masterManager.Unlock();
+                    }
+            }
+            else {
+                createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
+                    .then((imageBitmap) => {
+                        rc.bindTexture(that.target, that.ID);
+                        rc.texSubImage2D(that.target, level, 0, 0, that.width, that.height, format.format, format.type, imageBitmap);
+                        rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+                        if (that.mipLevels > 1) {
+                            rc.generateMipmap(that.target);
+                        }
+
+                        rc.bindTexture(that.target, null);
+                        that.masterManager.Unlock();
+                    });
+                }
+        });
+
+        // axios.get(url, {responseType: "blob"})
+        // .then((response) => {
+            
+        //     if (that.flip) {
+        //         rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
+        //         _flip = "flipY"
+        //     }
+
+            // createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
+            //     .then((imageBitmap) => {
+
+            //         if (format.dataType === "Float_Point") {
+                    
+            //             worker.postMessage([imageBitmap, _flip]);
+            //             worker.onmessage = function(e) {
+    
+            //                 rc.bindTexture(that.target, that.ID);
+            //                 rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
+            //                 rc.texSubImage2D(that.target, level, 0, 0, that.width, that.height, format.format, format.type, new Float32Array(e.data));
+            //                 rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                    
+            //                 if (that.mipLevels > 1) {
+            //                     rc.generateMipmap(that.target);
+            //                 }
+
+            //                 rc.bindTexture(that.target, null);
+            //                 worker.terminate();
+            //                 lockCount -= 1.0;
+            //             }
+            //         }
+            //         else {
+
+            //             rc.bindTexture(that.target, that.ID);
+            //             rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
+            //             rc.texSubImage2D(that.target, level, 0, 0, this.width, this.height, format.format, format.type, imageBitmap);
+            //             rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
+                
+            //             if (that.mipLevels > 1) {
+            //                 rc.generateMipmap(that.target);
+            //             }
+            //             rc.bindTexture(that.target, null);
+            //             lockCount -= 1.0;
+            //         }
+            //     });
+        // });
     }
 
     Bind(rc: WebGL2RenderingContext, unit: number) {

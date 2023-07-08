@@ -13,6 +13,7 @@ export interface DataFormat {
     format: number,
     type: number,
     components: number,
+    dataType: "Integer" | "Float_Point" 
     size: number
 }
 

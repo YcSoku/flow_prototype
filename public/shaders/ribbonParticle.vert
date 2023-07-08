@@ -15,12 +15,15 @@ layout (std140) uniform FlowFieldUniforms
 };
 
 uniform sampler2D particlePool;
+uniform sampler2D projectionTexture;
 uniform int blockNum;
 uniform int beginBlock;
 uniform int blockSize;
 uniform float fillWidth;
 uniform float aaWidth;
 uniform vec2 viewport;
+uniform vec4 extent;
+uniform mat4 u_matrix;
 
 out struct Stream_line_setting 
 {
@@ -29,6 +32,16 @@ out struct Stream_line_setting
     float isDiscarded;
     float velocity; // a percentage
 } sls;
+
+
+vec4 ReCoordinate(vec2 pos) {
+
+    vec2 geoPos;
+    geoPos.x = extent.x + (extent.z - extent.x) * pos.x;
+    geoPos.y = texture(projectionTexture, pos).y;
+    vec4 res = u_matrix * vec4(geoPos, 0.0, 1.0);
+    return res;
+}
 
 ivec2 get_uv(int vertexIndex)
 {
@@ -46,15 +59,16 @@ ivec2 get_uv(int vertexIndex)
     return vertexUV;
 }
 
-vec2 transfer_to_screen_space(vec2 pos)
+vec4 transfer_to_clip_space(vec2 pos)
 {
     // can do more
-    return pos;
+    return ReCoordinate(pos);
+    // return pos;
 }
 
-vec2 get_screen_position(ivec2 uv)
+vec4 get_clip_position(ivec2 uv)
 {
-    return transfer_to_screen_space(texelFetch(particlePool, uv, 0).rg);
+    return transfer_to_clip_space(texelFetch(particlePool, uv, 0).rg);
 }
 
 vec2 get_vector(vec2 beginVertex, vec2 endVertex)
@@ -70,24 +84,27 @@ void main()
     int nextVertex = currentVertex + 1;
     ivec2 c_uv = get_uv(currentVertex);
     ivec2 n_uv = get_uv(nextVertex);
-    vec2 cv_pos = get_screen_position(c_uv);
-    vec2 nv_pos = get_screen_position(n_uv);
+    vec4 cv_pos_CS = get_clip_position(c_uv);
+    vec4 nv_pos_CS = get_clip_position(n_uv);
+    vec2 cv_pos_SS = cv_pos_CS.xy / cv_pos_CS.w;
+    vec2 nv_pos_SS = nv_pos_CS.xy / nv_pos_CS.w;;
 
     // calculate the screen offset
     float lineWidth = fillWidth + aaWidth * 2.0;
-    vec2 v_cn = get_vector(cv_pos, nv_pos);
+    vec2 cn_vector = get_vector(cv_pos_SS, nv_pos_SS);
     float screenOffset = lineWidth / 2.0;
 
     // translate current vertex position
     vec3 view = vec3(0.0, 0.0, 1.0);
-    vec2 v_offset = normalize(cross(view, vec3(v_cn, 0.0))).xy * mix(1.0, -1.0, parity);
-    vec2 vertexPos = cv_pos + v_offset * screenOffset / viewport;
+    vec2 v_offset = normalize(cross(view, vec3(cn_vector, 0.0))).xy * mix(1.0, -1.0, parity);
+    vec2 vertexPos_SS = cv_pos_SS + v_offset * screenOffset / viewport;
 
     //////////////
     // calculate vertex position in screen coordinates
-    vec2 screenPos = vertexPos * 2.0 - 1.0;
-    // float z = mix(-1.0, 0.0, step(0.0, isAlive));
-    gl_Position = vec4(screenPos, 0.0, 1.0);
+    // vec2 screenPos = vertexPos * 2.0 - 1.0;
+    // gl_Position = vec4(screenPos, 0.0, 1.0);
+    vec2 vertexPos_CS = vertexPos_SS * cv_pos_CS.w;
+    gl_Position = vec4(vertexPos_CS, 0.0, cv_pos_CS.w);
 
     // prepare for anti-aliasing
     sls.edgeParam = 2.0 * parity - 1.0;

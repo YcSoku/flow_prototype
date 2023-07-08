@@ -15,6 +15,8 @@ export class TextureManager {
     private texture_array: Array<TextureReverseInfo|null>;
     private rc: WebGL2RenderingContext | null = null;
 
+    private lockCount = 0;
+
     constructor(maxTextureViewNum: number, maxSamplerNum: number, maxTextureNum: number) {
         this.textureView_array = new Array<TextureView|null>(maxTextureViewNum).fill(null);
         this.sampler_array = new Array<Sampler|null>(maxSamplerNum).fill(null);
@@ -118,6 +120,47 @@ export class TextureManager {
         return index;
     }
 
+    GetTextureViewLength() {
+        let count = 0;
+        for (let i = 0; i < this.textureView_array.length; i++) {
+            if (this.textureView_array[i] != null)
+                count++;
+        }
+        return count;
+    }
+
+    DeleteTexture(index: number): boolean {
+        if (index >= this.texture_array.length || this.texture_array[index] === null) {
+            console.log("ERROR::TEXTURE_MANAGER::TEXTUREVIEW_CANNOT_FOUND!");
+            return false;
+        }
+
+        this.texture_array[index]?.texture.textureView.Delete(this.rc!);
+        this.texture_array[index] = null;
+
+        return true;
+    }
+
+    Empty() {
+        for (let index = 0; index < this.texture_array.length; index++) {
+            if (this.texture_array[index] != null) {
+                this.texture_array[index]?.texture.textureView.Delete(this.rc!);
+                this.texture_array[index] = null;
+            }
+        }
+        for (let index = 0; index < this.sampler_array.length; index++) {
+            if (this.sampler_array[index] != null){
+                this.sampler_array[index]?.Delete(this.rc!);
+                this.sampler_array[index] = null;
+            }
+        }
+        for (let index = 0; index < this.textureView_array.length; index++) {
+            if (this.textureView_array[index] != null) {
+                this.textureView_array[index] = null;
+            }
+        }
+    }
+
     BindTexture(textureIDs: Array<number>, units: Array<number>): void {
         if (textureIDs.length !== units.length) {
             console.log("ERROR::TEXTURE_MANAGER::TEXTURE_ID_AND_UNITS_NOT_EQUAL!")
@@ -146,7 +189,7 @@ export class TextureManager {
     }
 
     CreateTextureData(info: TextureDataInfo) {
-        return TextureData.Create(this.rc!, info);
+        return TextureData.Create(this.rc!, info, this);
     }
 
     CreateTextureView(info: TextureViewInfo) {
@@ -157,15 +200,31 @@ export class TextureManager {
         return TextureView.Create(info);
     }
 
-    FillTextureDataByImage(tID: number, level: number, url: string) {
-        this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.FillByImage(this.rc!, level, url);
+    async FillTextureDataByImage(tID: number, level: number, url: string, width: number, height: number) {
+        await this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.FillByImage(this.rc!, level, url, width, height);
     }
 
-    UpdateTextureDataBySource(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number, data: ArrayBufferView) {
+    UpdateDataBySource(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number, data: ArrayBufferView) {
         this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByData(this.rc!, level, xoffset, yoffset, width, height, data);
     }
 
-    UpdateTextureDataByBuffer(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number) {
+    UpdateDataByBuffer(tID: number, level: number, xoffset: number, yoffset: number, width: number, height: number) {
         this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByBuffer(this.rc!, level, xoffset, yoffset, width, height);
+    }
+
+    Lock() {
+        this.lockCount += 1;
+    }
+
+    Unlock() {
+        this.lockCount -= 1;
+    }
+
+    IsBusy() {
+        return this.lockCount;
+    }
+
+    UpdateDataByImage(tID: number, url: string, level: number) {
+        this.textureView_array[this.GetTexture(tID)!.viewID]!.texture!.UpdateByImage(this.rc!, level, url);
     }
 }

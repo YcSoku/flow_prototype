@@ -9,6 +9,16 @@ in struct Stream_line_setting
     float velocity; // a percentage
 } sls;
 
+layout (std140) uniform FlowFieldUniforms
+{
+    float progress;
+    float segmentNum;
+    float fullLife;
+    float dropRate;
+    float dropRateBump;
+    float speedFactor;
+    vec4 flowBoundary;
+};
 uniform float fillWidth;
 uniform float aaWidth;
 
@@ -55,11 +65,11 @@ float getAlpha(float param)
 
 void main() 
 {
-    if (sls.isDiscarded <= 0.0) discard;
+    if (sls.isDiscarded >= fullLife) discard; 
     float alpha = getAlpha(abs(sls.edgeParam));
 
     // vec3 color = mix(colorFromInt(rampColors[int(sls.velocity * 7.0)]), colorFromInt(rampColors[int(sls.velocity * 7.0 + 0.5)]), fract(sls.velocity * 7.0));
     vec3 color = velocityColor(sls.velocity);
-    color = mix(vec3(0.6), color, alpha);
-    fragColor = vec4(color, 1.0);
+    // color = mix(vec3(0.7), color, alpha);
+    fragColor = vec4(color, 1.0) * alpha * sls.alphaDegree;
 }

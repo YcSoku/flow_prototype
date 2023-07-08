@@ -11,6 +11,6 @@ out vec4 fragColor;
 void main() 
 {
     vec3 color = texture(textureBuffer, texcoords).rgb;
-    color.rg = fract(color.rg / viewport);
+    // color.rg = fract(color.rg / viewport);
     fragColor = vec4(color, 1.0);
 }
