@@ -224,8 +224,8 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
             }
         }
 
-        this.trajectoryShader = await loadShader_url(this.context,"http://localhost:5173/shaders/ribbonParticle_3D.trajectory.vert", "http://localhost:5173/shaders/ribbonParticle_3D.trajectory.frag");
-        this.pointShader = await loadShader_url(this.context,"http://localhost:5173/shaders/ribbonParticle_3D.point.vert", "http://localhost:5173/shaders/ribbonParticle_3D.point.frag");
+        this.trajectoryShader = await loadShader_url(this.context,"/shaders/ribbonParticle_3D.trajectory.vert", "/shaders/ribbonParticle_3D.trajectory.frag");
+        this.pointShader = await loadShader_url(this.context,"/shaders/ribbonParticle_3D.point.vert", "/shaders/ribbonParticle_3D.point.frag");
 
         this.renderState = (Cesium as any).RenderState.fromCache({
             cull: {

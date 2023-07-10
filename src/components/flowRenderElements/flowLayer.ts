@@ -212,9 +212,9 @@ class FlowLayer extends CustomLayer {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         // Build Shaders
-        this.trajectoryShader = await loadShader_url(gl, "draw", "http://localhost:5173/shaders/ribbonParticle.trajectory.vert", "http://localhost:5173/shaders/ribbonParticle.trajectory.frag");
-        this.pointShader = await loadShader_url(gl, "draw", "http://localhost:5173/shaders/ribbonParticle.point.vert", "http://localhost:5173/shaders/ribbonParticle.point.frag");
-        this.poolShader = await loadShader_url(gl, "textureDebug", "http://localhost:5173/shaders/showPool.vert", "http://localhost:5173/shaders/showPool.frag");
+        this.trajectoryShader = await loadShader_url(gl, "draw", "/shaders/ribbonParticle.trajectory.vert", "/shaders/ribbonParticle.trajectory.frag");
+        this.pointShader = await loadShader_url(gl, "draw", "/shaders/ribbonParticle.point.vert", "/shaders/ribbonParticle.point.frag");
+        this.poolShader = await loadShader_url(gl, "textureDebug", "/shaders/showPool.vert", "/shaders/showPool.frag");
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, null);
