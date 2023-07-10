@@ -7,15 +7,9 @@
 </template>
     
 <script setup lang='ts'>
-    import { onMounted, ref } from 'vue';
+    import { onMounted } from 'vue';
     import { FlowFieldManager } from "./flowRenderElements/flowfield";
-    import { FlowFieldController, type FlowFieldConstraints } from './geoScratch/function/framework/component/flowfieldController';
     import Stats from 'three/examples/jsm/libs/stats.module';
-    import { GUI } from 'dat.gui'
-    import { textureManager } from './geoScratch/core/managers';
-
-    import { GetMap } from "./flowRenderElements/customLayer";
-    import { FlowLayer } from "./flowRenderElements/flowLayer"
     import "mapbox-gl/dist/mapbox-gl.css";
 
 
