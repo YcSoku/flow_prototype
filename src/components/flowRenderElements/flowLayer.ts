@@ -68,7 +68,6 @@ class FlowLayer extends CustomLayer {
     private trajectoryShader: Shader | null = null;
     private pointShader: Shader | null = null;
     private poolShader: Shader | null = null;
-    private textureShader: Shader | null = null;
 
     private uboMapBuffer: Float32Array;
     private particleMapBuffer : Float32Array | null = null;
@@ -116,8 +115,10 @@ class FlowLayer extends CustomLayer {
         // Set worker
         this.canvasWitdh = gl.canvas.width;
         this.canvasHeight = gl.canvas.height;
-        if (!this.ffManager.workerOK)
-            this.ffManager.aliveWorker.postMessage([0, this.canvasWitdh, this.canvasHeight]);
+        if (!this.ffManager.workerOK) {
+            console.log("npe")
+            this.ffManager.aliveWorker.postMessage([0]);
+        }
 
         const f32TextureViewInfo: TextureViewInfo = {
             textureDataInfo: {
@@ -223,6 +224,7 @@ class FlowLayer extends CustomLayer {
         this.ffManager.aliveWorker.postMessage([4, false]);
         this.ffManager.isSuspended = false;
 
+        this.ffManager.aliveWorker.postMessage([1]);
         return true;
     }
 
@@ -353,7 +355,6 @@ class FlowLayer extends CustomLayer {
 
         renderContextSetting(gl);
         this.ready = await this.Prepare(gl);
-        this.ffManager.aliveWorker.postMessage([1]);
     }
 
     render(gl: WebGL2RenderingContext, u_matrix: number[]) {
@@ -389,7 +390,6 @@ class FlowLayer extends CustomLayer {
         gl.deleteBuffer(this.trajectoryIndexBuffer);
         stm.Empty();
         this.poolShader!.delete();
-        this.textureShader!.delete();
         this.pointShader!.delete();
         this.trajectoryShader!.delete();
     }

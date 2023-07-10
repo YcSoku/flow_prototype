@@ -142,6 +142,7 @@ export class FlowFieldManager {
 
         // Activate worker
         ffManager.aliveWorker.postMessage([-1, ffManager.parser]);
+        ffManager.aliveWorker.postMessage([0]);
         ffManager.aliveWorker.onmessage = function(e) {
             switch (e.data[0]) {
                 case -1:
@@ -257,11 +258,6 @@ export class FlowFieldManager {
         this.platform.on("load", () => {
             this.platform.addLayer(this.ExportAsLayer());
         });
-        // this.platform.on("render", ()=> {
-        //     if (this.debug) {
-        //         this.stats.update();
-        //     }
-        // })
     }
 
     DestroyMap() {

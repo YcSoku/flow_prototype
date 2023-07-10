@@ -71,7 +71,7 @@ class ParticleSystem {
 
     // Render variable
     public beginBlock = -1.0;
-    private streamline = 0.0;
+    private streamline = 262144;
     private maxBlockSize = 0.0;
     private _timeCount = 0.0;
     private timeLast = 10.0;
@@ -385,7 +385,6 @@ class ParticleSystem {
         this.updateShader!.setVec1i("flowField", [0, 1]);
         this.updateShader!.setVec1i("mask", [2, 3]);
         this.updateShader!.setFloat("randomSeed", Math.random());
-        this.updateShader!.setFloat2("boundary", gl.canvas.width, gl.canvas.height);
         this.updateShader!.setUniformBlock("FlowFieldUniforms", 0);
 
         gl.enable(gl.RASTERIZER_DISCARD);
@@ -440,7 +439,7 @@ onmessage = async function(e) {
             this.postMessage([-1]);
             break;
         case 0:
-            canvas  = new OffscreenCanvas(e.data[1], e.data[2]);
+            canvas  = new OffscreenCanvas(0, 0);
             gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
             const available_extensions = gl.getSupportedExtensions()!;
             for (const extension of available_extensions)

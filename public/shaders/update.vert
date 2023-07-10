@@ -19,7 +19,6 @@ layout (std140) uniform FlowFieldUniforms
 uniform sampler2D flowField[2];
 uniform sampler2D mask[2];
 // uniform sampler2D validAddress;
-uniform vec2 boundary;
 uniform float randomSeed;
 
 out vec3 newInfo;
@@ -94,7 +93,7 @@ void simulation(vec2 resolution)
     vec2 speed = lookup_speed(uv, resolution);
     float speedRate = speed_rate(speed);
 
-    vec2 nPos = vec2(particleInfo.xy + speed * speedFactor / boundary);
+    vec2 nPos = vec2(particleInfo.xy + speed * speedFactor / resolution);
     nPos = clamp(nPos, vec2(0.0), vec2(1.0));
     float dropped = drop(speedRate, uv) * is_in_flow_progress(resolution, nPos);
 

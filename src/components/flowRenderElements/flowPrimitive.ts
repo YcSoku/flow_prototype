@@ -120,7 +120,7 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
 
         // Set worker
         if (!this.ffManager.workerOK)
-            this.ffManager.aliveWorker.postMessage([0, this.context._canvas.width, this.context._canvas.height]);
+            this.ffManager.aliveWorker.postMessage([0]);
 
         // Get boundaries of flow speed
         this.flowBoundary = this.ffManager.parser.flowBoundary;
