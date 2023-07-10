@@ -22,12 +22,14 @@
     async function renderFlowInMap() {
 
         // Set FPS monitor
-        const container = document.getElementById('stats'); 
         let stats = new (Stats as any)();
-        container?.appendChild( stats.dom );
 
         // Initialize the flow field manager
         const ffManager = await FlowFieldManager.Create("http://localhost:5173/json/flow_field_description.json", stats);
+        if (ffManager.debug = true) {
+            const container = document.getElementById('stats'); 
+            container?.appendChild( stats.dom );
+        }
     }
 
     onMounted(async()=> {
@@ -43,11 +45,4 @@
     margin: 0;
 }
 
-/* #viewport {
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-} */
 </style>

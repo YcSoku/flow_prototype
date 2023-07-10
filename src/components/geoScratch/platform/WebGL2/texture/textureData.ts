@@ -123,40 +123,6 @@ export class TextureData implements TextureDataInfo {
                     });
                 }
         });
-            // createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
-            //     .then((imageBitmap) => {
-
-            //         if (format.dataType === "Float_Point") {
-                    
-            //             worker.postMessage([imageBitmap, _flip]);
-            //             worker.onmessage = function(e) {
-    
-            //                 rc.bindTexture(that.target, that.ID);
-            //                 rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, new Float32Array(e.data));
-            //                 rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
-                    
-            //                 if (that.mipLevels > 1) {
-            //                     rc.generateMipmap(that.target);
-            //                 }
-
-            //                 rc.bindTexture(that.target, null);
-            //                 worker.terminate();
-            //             }
-            //         }
-            //         else {
-
-            //             rc.bindTexture(that.target, that.ID);
-            //             rc.texSubImage2D(that.target, level, 0, 0, width, height, format.format, format.type, imageBitmap);
-            //             rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
-                
-            //             if (that.mipLevels > 1) {
-            //                 rc.generateMipmap(that.target);
-            //             }
-
-            //             rc.bindTexture(that.target, null);
-            //         }
-            //     });
-        // });
     }
 
     FillByData(rc: WebGL2RenderingContext, level: number,  width: number, height: number, data: ArrayBufferView) {
@@ -235,52 +201,6 @@ export class TextureData implements TextureDataInfo {
                     });
                 }
         });
-
-        // axios.get(url, {responseType: "blob"})
-        // .then((response) => {
-            
-        //     if (that.flip) {
-        //         rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, true);
-        //         _flip = "flipY"
-        //     }
-
-            // createImageBitmap(response.data, {imageOrientation: _flip, premultiplyAlpha: "none", colorSpaceConversion: "default"})
-            //     .then((imageBitmap) => {
-
-            //         if (format.dataType === "Float_Point") {
-                    
-            //             worker.postMessage([imageBitmap, _flip]);
-            //             worker.onmessage = function(e) {
-    
-            //                 rc.bindTexture(that.target, that.ID);
-            //                 rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
-            //                 rc.texSubImage2D(that.target, level, 0, 0, that.width, that.height, format.format, format.type, new Float32Array(e.data));
-            //                 rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
-                    
-            //                 if (that.mipLevels > 1) {
-            //                     rc.generateMipmap(that.target);
-            //                 }
-
-            //                 rc.bindTexture(that.target, null);
-            //                 worker.terminate();
-            //                 lockCount -= 1.0;
-            //             }
-            //         }
-            //         else {
-
-            //             rc.bindTexture(that.target, that.ID);
-            //             rc.pixelStorei(rc.UNPACK_ALIGNMENT, 1);
-            //             rc.texSubImage2D(that.target, level, 0, 0, this.width, this.height, format.format, format.type, imageBitmap);
-            //             rc.pixelStorei(rc.UNPACK_FLIP_Y_WEBGL, false);
-                
-            //             if (that.mipLevels > 1) {
-            //                 rc.generateMipmap(that.target);
-            //             }
-            //             rc.bindTexture(that.target, null);
-            //             lockCount -= 1.0;
-            //         }
-            //     });
-        // });
     }
 
     Bind(rc: WebGL2RenderingContext, unit: number) {

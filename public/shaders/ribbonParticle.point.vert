@@ -93,7 +93,7 @@ vec2 get_vector(vec2 beginVertex, vec2 endVertex)
 void main()
 {
     // get screen positions from particle pool
-    int currentVertex = gl_VertexID / 6;
+    int currentVertex = 0;
     ivec2 c_uv = get_uv(currentVertex);
     vec4 cv_pos_CS = get_clip_position(c_uv);
     vec2 cv_pos_SS = cv_pos_CS.xy / cv_pos_CS.w;
@@ -104,7 +104,7 @@ void main()
     float screenOffset = r / 2.0;
 
     // translate current vertex position
-    vec2 v_offset = screenOffset * box[gl_VertexID % 6];
+    vec2 v_offset = screenOffset * box[gl_VertexID];
     vec2 vertexPos_SS = cv_pos_SS + v_offset / viewport;
 
     //////////////
@@ -118,5 +118,5 @@ void main()
     sls.alphaDegree = 1.0 - segmentRate;
 
     sls.velocity = speedRate;
-    sls.uv = uvs[gl_VertexID % 6];
+    sls.uv = uvs[gl_VertexID];
 }

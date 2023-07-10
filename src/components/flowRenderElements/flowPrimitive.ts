@@ -55,6 +55,7 @@ export class FlowFieldPrimitive {
     private trajectoryPool: any;
     private transformTexture: any;
     private trajectoryShader: any;
+    private pointShader: any;
     private drawCommand: any;
     private trajectoryIndexBuffer: any;
     private renderVAO: any;
@@ -130,6 +131,7 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
         this.uboMapBuffer[10] = this.flowBoundary[2];
         this.uboMapBuffer[11] = this.flowBoundary[3];
         this.segmentNum = this.ffManager.controller!.segmentNum;
+        this.aliveLineNum = 0;
 
         // Load texture of projection
         await this.LoadTransformTexture(this.ffManager.parser.transform3DResource, 1024, 2048);
@@ -222,9 +224,8 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
             }
         }
 
-        this.trajectoryShader = await loadShader_url(this.context,"http://localhost:5173/shaders/ribbonParticle_3D.trajectory.vert", "http://localhost:5173/shaders/ribbonParticle_3D.trajectory.frag")
-        // this.trajectoryShader = await loadShader_url(this.context,"http://localhost:5173/shaders/test.vert", "http://localhost:5173/shaders/test.frag")
-
+        this.trajectoryShader = await loadShader_url(this.context,"http://localhost:5173/shaders/ribbonParticle_3D.trajectory.vert", "http://localhost:5173/shaders/ribbonParticle_3D.trajectory.frag");
+        this.pointShader = await loadShader_url(this.context,"http://localhost:5173/shaders/ribbonParticle_3D.point.vert", "http://localhost:5173/shaders/ribbonParticle_3D.point.frag");
 
         this.renderState = (Cesium as any).RenderState.fromCache({
             cull: {
@@ -251,10 +252,8 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
 
         this.drawCommand = new (Cesium as any).DrawCommand({
             vertexArray: that.renderVAO,
-            count: (that.segmentNum - 1) * 2,
             instanceCount: that.aliveLineNum,
             primitiveType: Cesium.PrimitiveType.TRIANGLE_STRIP,
-            shaderProgram: that.trajectoryShader,
             uniformMap: that.uniformMap,
             renderState: that.renderState,
             pass: (Cesium as any).Pass.OPAQUE
@@ -273,25 +272,34 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
             return;
         }
 
-        if (this.segmentPrepare) {
-            this.segmentPrepare--;
+        if (this.segmentPrepare >= 0) {
             return;
         }
 
         this.drawCommand.instanceCount = this.aliveLineNum;
-        // this.ffManager.controller!.fillWidth = 1.0;
-        // this.ffManager.controller!.aaWidth = 1.5;
-        // this.drawCommand.instanceCount = 65536;
-        // this.controller!.segmentNum = 16384.0;
+
+        if (this.ffManager.controller?.primitive == "trajectory") {
+            this.drawCommand.count = (this.segmentNum - 1) * 2;
+            this.drawCommand.shaderProgram = this.trajectoryShader;
+        }
+        else {
+            this.drawCommand.count = 4;
+            this.drawCommand.shaderProgram = this.pointShader;
+        }
+        
         frameState.commandList.push(this.drawCommand);
 
-        // this.stats.update();
+        if (this.ffManager.debug) {
+            this.ffManager.stats.update();
+        }
     }
 
     destroy() {
         this.trajectoryPool.destroy();
         this.transformTexture.destroy();
         this.renderVAO.destroy();
+        this.pointShader.destroy();
+        this.trajectoryShader.destroy();
     }
 
     GPUMemoryUpdate(beginBlock: number, trajectoryBlock: Float32Array, aliveLineNum: number, trajectoryBuffer: Float32Array) {
@@ -306,7 +314,6 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
                 width: this.maxBlockSize,
                 height: this.maxBlockSize,
                 arrayBufferView: trajectoryBlock
-                
             }
         });
 
@@ -314,7 +321,6 @@ constructor(public ffManager: FlowFieldManager, scene?: any) {
 
         this.ffManager.aliveWorker.postMessage([1]);
         this.scene.requestRender();
-        this.ffManager.stats.update();
-        
+        this.segmentPrepare--;
     }
 }

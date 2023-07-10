@@ -95,6 +95,8 @@ export class FlowFieldManager {
     private platformIndex = 0;
     public isSuspended = false;
 
+    public debug = false;
+
     constructor(descriptionUrl: string, stats?: any) {
 
         this.parser = new DescriptionParser(descriptionUrl);
@@ -138,12 +140,6 @@ export class FlowFieldManager {
         // Set UI
         ffManager.UIControllerSetting();
 
-        // Set flow-field visualization on mapbox as default
-        ffManager.aliveWorker.postMessage([4, true]);
-        ffManager.isSuspended = true;
-        ffManager.platformIndex = 1;
-        ffManager.InitMap();
-
         // Activate worker
         ffManager.aliveWorker.postMessage([-1, ffManager.parser]);
         ffManager.aliveWorker.onmessage = function(e) {
@@ -178,7 +174,8 @@ export class FlowFieldManager {
         // Initialize the GUI
         const gui = new GUI;
         const ffFolder = gui.addFolder('Flow Fields');
-        ffFolder.add(ffController, 'progressRate', 0.0, 1.0, 0.001).onFinishChange(()=>{this.updateProgress = true});
+        ffFolder.add(ffController, 'isSteady', false).onChange(()=>{this.updateWorkerSetting = true});
+        ffFolder.add(ffController, 'progressRate', 0.0, 1.0, 0.001).onChange(()=>{this.updateProgress = true});
         ffFolder.add(ffController, 'speedFactor', 0.0, 10.0, 0.001).onChange(()=>{this.updateWorkerSetting = true});
         ffFolder.add(ffController, 'dropRate', 0.0, MAX_DORP_RATE, 0.001).onChange(()=>{this.updateWorkerSetting = true});
         ffFolder.add(ffController, 'dropRateBump', 0.0, MAX_DORP_RATE_BUMP, 0.001).onChange(()=>{this.updateWorkerSetting = true});
@@ -190,7 +187,7 @@ export class FlowFieldManager {
         slFolder.add(ffController, 'aaWidth', 0.0, 30.0, 0.001).onChange(()=>{this.updateWorkerSetting = true});
         slFolder.open();
         const contentFolder = gui.addFolder('Rendering content');
-        contentFolder.add(ffController, 'content', ["none", "particle pool"]).onChange(()=>{this.updateWorkerSetting = true});
+        // contentFolder.add(ffController, 'content', ["none", "particle pool"]).onChange(()=>{this.updateWorkerSetting = true});
         contentFolder.add(ffController, 'colorScheme', [0, 1, 2]).onChange(()=>{this.updateWorkerSetting = true});
         contentFolder.add(ffController, 'primitive', ["trajectory", "point"]).onChange(()=>{this.updateWorkerSetting = true});
         contentFolder.open();
@@ -260,6 +257,11 @@ export class FlowFieldManager {
         this.platform.on("load", () => {
             this.platform.addLayer(this.ExportAsLayer());
         });
+        // this.platform.on("render", ()=> {
+        //     if (this.debug) {
+        //         this.stats.update();
+        //     }
+        // })
     }
 
     DestroyMap() {
@@ -280,28 +282,25 @@ export class FlowFieldManager {
             });
 
         this.platform.scene.primitives.add(this.ExportAsPrimitive(this.platform.scene));
-        // this.platform.scene.debugShowFramesPerSecond = true;
-        console.log(this.platform.scene.primitives);
+        if (this.debug)
+            this.platform.scene.debugShowFramesPerSecond = true;
         
         var iframe = document.getElementsByClassName("cesium-infoBox-iframe")[0];
         iframe.setAttribute("sandbox", "allow-same-origin allow-scripts allow-popups allow-forms");
-        iframe.setAttribute("src", ""); //必须设置src为空 否则不会生效。
-
-        // Add Cesium OSM Buildings, a global 3D buildings layer.
-        // const buildingTileset = viewer.scene.primitives.add(Cesium.createOsmBuildings());   
+        iframe.setAttribute("src", ""); //必须设置src为空 否则不会生效。  
 
         // Set globe
         // viewer.scene.globe.show = false; 
         this.platform.scene.globe.depthTestAgainstTerrain = true;
         
 
-        // Fly the camera to San Francisco at the given longitude, latitude, and height.
-        this.platform.camera.flyTo({
-        destination : Cesium.Cartesian3.fromDegrees(120.980697, 31.684162, 400000),
-        orientation : {
-                heading : Cesium.Math.toRadians(0.0),
-                pitch : Cesium.Math.toRadians(-90.0),
-            }
+        // Set the camera to bt the given longitude, latitude, and height.
+        this.platform.camera.setView({
+            destination : Cesium.Cartesian3.fromDegrees(120.980697, 31.684162, 400000),
+            orientation : {
+                    heading : Cesium.Math.toRadians(0.0),
+                    pitch : Cesium.Math.toRadians(-90.0),
+                }
         });
     }
 

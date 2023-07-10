@@ -19,6 +19,7 @@ export class FlowFieldController {
     fillWidth: number;
     aaWidth: number;
     colorScheme: number;
+    isSteady: boolean;
     content: string;
     primitive: string;
     platform: string;
@@ -36,9 +37,10 @@ export class FlowFieldController {
         this.fillWidth = 1.0;
         this.aaWidth = 1.0;
         this.colorScheme = 0;
+        this.isSteady = false;
         this.content = "none";
         this.primitive = "trajectory"
-        this.platform = "mapbox";
+        this.platform = "none";
 
         this["lineNum"] = this.lineNum;
 
